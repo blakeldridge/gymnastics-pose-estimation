@@ -34,7 +34,9 @@ def main():
         output = run_hrnet(image_path, model_path, config_path)
         visualisation.image_with_joints(image_path, output[0])
     elif MODEL_TYPE == "vp":
-        pass
+        from models.vitpose import run_vitpose
+        output = run_vitpose(image_path)
+        visualisation.image_with_joints(image_path, output)
     else:
         print("Model not supported!")
 
