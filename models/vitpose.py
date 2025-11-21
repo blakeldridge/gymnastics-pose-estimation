@@ -1,5 +1,6 @@
 import torch
 import os
+import requests
 import numpy as np
 from PIL import Image
 
@@ -9,10 +10,14 @@ from transformers import (
     VitPoseForPoseEstimation,
 )
 
-def run_vitpose(image_path, device="cpu"):
+def run_vitpose(image_path, image_loc="device",device="cpu"):
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    image = Image.open(image_path)
+    if image_loc == "device":
+        image = Image.open(image_path)
+    else:
+        image = Image.open(requests.get(image_path, stream=True).raw)
+
     h, w = np.array(image).shape[:2]
     image = image.resize((192, 256)).convert("RGB")
 

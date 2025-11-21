@@ -1,6 +1,7 @@
 import os
 import torch
-import cv2
+import requests
+from PIL import Image
 import numpy as np
 from inference_helpers.hrnet import inference, pose_hrnet, transforms
 from inference_helpers.hrnet.default import _C as hrnet_cfg
@@ -13,11 +14,17 @@ from torchvision import transforms as tv_transforms
 # - should have a bit of padding around the person        #
 #---------------------------------------------------------#
 
-def preprocess_image(cfg, image_path):
+def preprocess_image(cfg, image_path, image_loc):
     # read image
-    image = cv2.imread(image_path)
+    if image_loc == "device":
+        image = Image.open(image_path)
+    else:
+        image = Image.open(requests.get(image_path, stream=True).raw)
+
     if image is None:
         raise FileNotFoundError(f"Could not read image: {image_path}")
+    
+    image = np.array(image)
     h, w = image.shape[:2]
     center = np.array([w/2, h/2], dtype=np.float32)
 
@@ -39,9 +46,6 @@ def preprocess_image(cfg, image_path):
     # resize to 256x192
     input_image = transforms.crop(image, center, scale, input_size)
 
-    cv2.imshow("HRNet input",input_image)
-    cv2.waitKey(0)
-    
     # normalize
     transform = tv_transforms.Compose([
         tv_transforms.ToTensor(),
@@ -51,7 +55,7 @@ def preprocess_image(cfg, image_path):
     tensor_image = transform(input_image).unsqueeze(0)
     return tensor_image, center, scale
 
-def run_hrnet(image_path, weights_path, config_path, device="cpu"):
+def run_hrnet(image_path, weights_path, config_path, image_loc="device", device="cpu"):
     # Create config 
     cfg = hrnet_cfg.clone()
     cfg.merge_from_file(config_path)
@@ -62,7 +66,7 @@ def run_hrnet(image_path, weights_path, config_path, device="cpu"):
     model.to(device)
 
     # Preprocess image
-    image, center, scale = preprocess_image(cfg, image_path)
+    image, center, scale = preprocess_image(cfg, image_path, image_loc)
     image.to(device)
     
     # Run inference
