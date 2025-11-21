@@ -14,6 +14,9 @@ from torchvision import transforms as tv_transforms
 # - should have a bit of padding around the person        #
 #---------------------------------------------------------#
 
+default_weights = "../weights/pose_hrnet_w32_256x192.pth"
+default_config = "../weights/w32_256x192_adam_lr1e-3.yaml"
+
 def preprocess_image(cfg, image_path, image_loc):
     # read image
     if image_loc == "device":
@@ -35,10 +38,6 @@ def preprocess_image(cfg, image_path, image_loc):
 
     scale = np.array([scale_x, scale_y], dtype=np.float32)
 
-
-    print("Center : ", center, "Scale : ", scale)
-    
-
     input_w = cfg.MODEL.IMAGE_SIZE[0]
     input_h = cfg.MODEL.IMAGE_SIZE[1]
     input_size = [input_w, input_h]    # [192, 256] typically
@@ -55,7 +54,7 @@ def preprocess_image(cfg, image_path, image_loc):
     tensor_image = transform(input_image).unsqueeze(0)
     return tensor_image, center, scale
 
-def run_hrnet(image_path, weights_path, config_path, image_loc="device", device="cpu"):
+def run_hrnet(image_path, weights_path=default_weights, config_path=default_config, image_loc="device", device="cpu"):
     # Create config 
     cfg = hrnet_cfg.clone()
     cfg.merge_from_file(config_path)
