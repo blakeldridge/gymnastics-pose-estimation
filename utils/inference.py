@@ -30,7 +30,9 @@ def main():
     if MODEL_TYPE == "mp":
         pass
     elif MODEL_TYPE == "hr":
-        pass
+        from models.hrnet import run_hrnet
+        output = run_hrnet(image_path, model_path, config_path)
+        visualisation.image_with_joints(image_path, output[0])
     elif MODEL_TYPE == "vp":
         pass
     else:
