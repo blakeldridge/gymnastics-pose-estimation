@@ -13,7 +13,7 @@ MODEL_PATH = "../weights/pose_hrnet_w32_256x192.pth"
 CONFIG_PATH = "../weights/w32_256x192_adam_lr1e-3.yaml"
 # --------------- #
 
-IMAGE_PATH = "../data/images/image_2.png"
+IMAGE_PATH = "../data/images/image_4.png"
 OUTPUT_PATH = "../results/test1.csv"
 
 
@@ -31,12 +31,14 @@ def main():
         pass
     elif MODEL_TYPE == "hr":
         from models.hrnet import run_hrnet
-        output = run_hrnet(image_path, model_path, config_path)
+        output = run_hrnet(image_path, model_path, config_path, image_loc="url")
         visualisation.image_with_joints(image_path, output[0])
     elif MODEL_TYPE == "vp":
-        from models.vitpose import run_vitpose
-        output = run_vitpose(image_path)
-        visualisation.image_with_joints(image_path, output)
+        from models.vitpose import ViTPose
+        model = ViTPose()
+        output = model(image_path, "device")
+        keypoints = output[0][0]["keypoints"]
+        visualisation.image_with_joints(image_path, keypoints)
     else:
         print("Model not supported!")
 
