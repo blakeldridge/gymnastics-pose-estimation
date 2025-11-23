@@ -27,6 +27,28 @@ My aim is to find an accurate **single-camera pipeline** for gymnastics pose est
 
 > Model run on 50 images
 
+### Mediapipe — COCO Dataset
+
+| Metric | IoU | Area | MaxDets | Score |
+|--------|-----|------|---------|-------|
+| **Average Precision (AP)** | 0.50:0.95 | all | 20 | **0.095** |
+| **Average Precision (AP)** | 0.50 | all | 20 | **0.152** |
+| **Average Precision (AP)** | 0.75 | all | 20 | **0.099** |
+| **Average Precision (AP)** | 0.50:0.95 | medium | 20 | **0.062** |
+| **Average Precision (AP)** | 0.50:0.95 | large | 20 | **0.134** |
+| **Average Recall (AR)**    | 0.50:0.95 | all | 20 | **0.102** |
+| **Average Recall (AR)**    | 0.50 | all | 20 | **0.152** |
+| **Average Recall (AR)**    | 0.75 | all | 20 | **0.109** |
+| **Average Recall (AR)**    | 0.50:0.95 | medium | 20 | **0.062** |
+| **Average Recall (AR)**    | 0.50:0.95 | large | 20 | **0.171** |
+
+> Model run on 50 images
+
+There is a clear lack of accuracy with this model, reasoning :
+- lightweight model
+- not detecting a lot of poses
+- might be worth using a better bounding box detector first
+
 ---
 
 ## Input Data, Annotations, and Weights

@@ -4,9 +4,11 @@ import numpy as np
 import json
 import os
 import time
+import requests
 from models.vitpose import ViTPose
 from models.mediapipe import MediaPipe
 from PIL import Image
+import matplotlib.pyplot as plt
 
 ANNOTATION_FILE = "/home/blake/Projects/gymnastics-pose-estimation/data/coco_annotations/person_keypoints_val2017.json"
 REDUCED_ANNOTATION_FILE = "/home/blake/Projects/gymnastics-pose-estimation/data/coco_annotations/person_keypoints_val2017_reduced.json" # reduced version
@@ -78,6 +80,16 @@ def run_model(model, results_path, batch_size=-1):
 
     print(f"Pose Estiamtion Complete : {(end_time - start_time):.2f} secs")
 
+def show_image(image_num=0):
+    with open(ann_file, "r") as f:
+        data = json.load(f)
+
+    image = Image.open(requests.get(data["images"][image_num]["coco_url"], stream=True).raw).convert("RGB")
+    
+    plt.imshow(image)
+    plt.axis("off")
+    plt.show()
+
 def test_vitpose():
     results_path = os.path.normpath(os.path.join(DIR, "../results/vitpose_coco_keypoints.json"))
 
@@ -86,6 +98,17 @@ def test_vitpose():
 
         run_model(vitpose, results_path, batch_size=5)
 
+    coco_evaluation(results_path)
+
+def test_mediapipe():
+    results_path = os.path.normpath(os.path.join(DIR, "../results/mediapipe_coco_keypoints.json"))
+
+    if not os.path.exists(results_path):
+        model_path = os.path.normpath(os.path.join(DIR, "../weights/pose_landmarker_full.task"))
+        mp_model = MediaPipe(model_path)
+
+        run_model(mp_model, results_path)
+    
     coco_evaluation(results_path)
 
 def reduce_annotations():
@@ -99,5 +122,6 @@ def reduce_annotations():
         f.write(result_json)
 
 if __name__ == "__main__":
-    # reduce_annotations()
-    test_vitpose()
+    reduce_annotations()
+    test_mediapipe()
+    # show_image(2)

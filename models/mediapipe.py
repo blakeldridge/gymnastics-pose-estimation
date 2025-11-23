@@ -16,7 +16,9 @@ class MediaPipe:
 
         self.options = PoseLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=model_path),
-            running_mode=VisionRunningMode.IMAGE)
+            running_mode=VisionRunningMode.IMAGE,
+            num_poses=5
+        )
 
     def load_mp_image(self, path, image_loc):
         if image_loc == "device":
@@ -49,6 +51,11 @@ class MediaPipe:
             for img in images:
                 img_poses = []
                 pose_landmarker_result = landmarker.detect(img)
+
+                if not pose_landmarker_result.pose_landmarks:
+                    poses.append([{"keypoints":np.array([[0, 0] for _ in range(33)]), "score":0}])
+                    continue
+
                 for person in pose_landmarker_result.pose_landmarks:
                     keypoints_list = []
                     confidence_list = []
