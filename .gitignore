@@ -1,3 +1,7 @@
 .venv
+.env
 *.mp4
 __pycache__
+weights/
+data/
+results/

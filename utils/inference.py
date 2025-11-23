@@ -6,12 +6,16 @@ from . import visualisation
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 
-MODEL_TYPE = "vp" # "mp"  "hr"  "vp" "mn"
+MODEL_TYPE = "mp" # "mp"  "hr"  "vp" "mn"
 
 # ---- HRNet ---- #
-MODEL_PATH = "../weights/pose_hrnet_w32_256x192.pth"
+HR_MODEL_PATH = "../weights/pose_hrnet_w32_256x192.pth"
 CONFIG_PATH = "../weights/w32_256x192_adam_lr1e-3.yaml"
 # --------------- #
+
+# ---- MediaPipe ---- #
+MP_MODEL_PATH = "../weights/pose_landmarker_full.task"
+# ------------------- #
 
 IMAGE_PATH = "../data/images/image_4.png"
 OUTPUT_PATH = "../results/test1.csv"
@@ -24,13 +28,18 @@ def get_path(pth):
 
 def main():
     image_path = get_path(IMAGE_PATH)
-    model_path = get_path(MODEL_PATH)
     config_path = get_path(CONFIG_PATH)
 
     if MODEL_TYPE == "mp":
-        pass
+        from models.mediapipe import MediaPipe
+        model_path = get_path(MP_MODEL_PATH)
+        model = MediaPipe(model_path)
+        output = model(image_path, "device")
+        keypoints = output[0][0]["keypoints"]
+        visualisation.image_with_joints(image_path, keypoints)
     elif MODEL_TYPE == "hr":
         from models.hrnet import run_hrnet
+        model_path = get_path(HR_MODEL_PATH)
         output = run_hrnet(image_path, model_path, config_path, image_loc="url")
         visualisation.image_with_joints(image_path, output[0])
     elif MODEL_TYPE == "vp":

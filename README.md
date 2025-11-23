@@ -41,6 +41,11 @@ My aim is to find an accurate **single-camera pipeline** for gymnastics pose est
 - Config file: [HRNet COCO Config](https://github.com/HRNet/HRNet-Human-Pose-Estimation/tree/master/experiments/coco/hrnet)  
 - Stored at: `weights/w32_256x192_adam_lr1e-3.yaml`  
 
+### Mediapipe
+
+- Using the **Full pose landmarker pre-trained weights** : [Mediapipe](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker/index#models)
+- Stored at : `weights/pose_landmarker_full.task`
+
 ---
 
 ## Libraries Used
@@ -52,5 +57,6 @@ My aim is to find an accurate **single-camera pipeline** for gymnastics pose est
 - Requests  
 - pycocotools  
 - OpenCV (`opencv-python`)  
+- mediapipe
 
 ---
