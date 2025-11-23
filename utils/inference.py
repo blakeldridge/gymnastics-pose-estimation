@@ -6,7 +6,7 @@ from . import visualisation
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 
-MODEL_TYPE = "mp" # "mp"  "hr"  "vp" "mn"
+MODEL_TYPE = "hr" # "mp"  "hr"  "vp" "mn"
 
 # ---- HRNet ---- #
 HR_MODEL_PATH = "../weights/pose_hrnet_w32_256x192.pth"
@@ -17,7 +17,7 @@ CONFIG_PATH = "../weights/w32_256x192_adam_lr1e-3.yaml"
 MP_MODEL_PATH = "../weights/pose_landmarker_full.task"
 # ------------------- #
 
-IMAGE_PATH = "../data/images/image_4.png"
+IMAGE_PATH = "../data/images/image_6.png"
 OUTPUT_PATH = "../results/test1.csv"
 
 
@@ -32,22 +32,34 @@ def main():
 
     if MODEL_TYPE == "mp":
         from models.mediapipe import MediaPipe
+
         model_path = get_path(MP_MODEL_PATH)
         model = MediaPipe(model_path)
         output = model(image_path, "device")
         keypoints = output[0][0]["keypoints"]
+
         visualisation.image_with_joints(image_path, keypoints)
+
     elif MODEL_TYPE == "hr":
-        from models.hrnet import run_hrnet
+        from models.hrnet import HRNet
+
         model_path = get_path(HR_MODEL_PATH)
-        output = run_hrnet(image_path, model_path, config_path, image_loc="url")
-        visualisation.image_with_joints(image_path, output[0])
+        model = HRNet(model_path, config_path)
+        output = model(image_path, image_loc="device")
+        keypoints = output[0][0]["keypoints"]
+        print(keypoints)
+
+        visualisation.image_with_joints(image_path, keypoints)
+
     elif MODEL_TYPE == "vp":
         from models.vitpose import ViTPose
+
         model = ViTPose()
         output = model(image_path, "device")
         keypoints = output[0][0]["keypoints"]
+
         visualisation.image_with_joints(image_path, keypoints)
+
     else:
         print("Model not supported!")
 
