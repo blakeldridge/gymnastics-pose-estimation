@@ -27,6 +27,23 @@ My aim is to find an accurate **single-camera pipeline** for gymnastics pose est
 
 > Model run on 50 images
 
+### HRNet - COCO Dataset
+
+| Metric | IoU | Area | MaxDets | Score |
+|--------|-----|------|---------|-------|
+| **Average Precision (AP)** | 0.50:0.95 | all | 20 | **0.752** |
+| **Average Precision (AP)** | 0.50 | all | 20 | **0.922** |
+| **Average Precision (AP)** | 0.75 | all | 20 | **0.889** |
+| **Average Precision (AP)** | 0.50:0.95 | medium | 20 | **0.774** |
+| **Average Precision (AP)** | 0.50:0.95 | large | 20 | **0.774** |
+| **Average Recall (AR)**    | 0.50:0.95 | all | 20 | **0.789** |
+| **Average Recall (AR)**    | 0.50 | all | 20 | **0.957** |
+| **Average Recall (AR)**    | 0.75 | all | 20 | **0.913** |
+| **Average Recall (AR)**    | 0.50:0.95 | medium | 20 | **0.793** |
+| **Average Recall (AR)**    | 0.50:0.95 | large | 20 | **0.794** |
+
+> Model run on 50 images
+
 ### Mediapipe — COCO Dataset
 
 | Metric | IoU | Area | MaxDets | Score |

@@ -7,6 +7,7 @@ import time
 import requests
 from models.vitpose import ViTPose
 from models.mediapipe import MediaPipe
+from models.hrnet import HRNet
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -78,7 +79,7 @@ def run_model(model, results_path, batch_size=-1):
         f.write(results_json)
     end_time = time.time()
 
-    print(f"Pose Estiamtion Complete : {(end_time - start_time):.2f} secs")
+    print(f"Pose Estimation Complete : {(end_time - start_time):.2f} secs")
 
 def show_image(image_num=0):
     with open(ann_file, "r") as f:
@@ -111,6 +112,18 @@ def test_mediapipe():
     
     coco_evaluation(results_path)
 
+def test_hrnet():
+    results_path = os.path.normpath(os.path.join(DIR, "../results/hrnet_coco_keypoints.json"))
+
+    if not os.path.exists(results_path):
+        model_path = os.path.normpath(os.path.join(DIR, "../weights/pose_hrnet_w32_256x192.pth"))
+        config_path = os.path.normpath(os.path.join(DIR, "../weights/w32_256x192_adam_lr1e-3.yaml"))
+        hrnet = HRNet(model_path, config_path)
+
+        run_model(hrnet, results_path, batch_size=10)
+    
+    coco_evaluation(results_path)
+
 def reduce_annotations():
     with open(ANNOTATION_FILE, "r") as f:
         data = json.load(f)
@@ -123,5 +136,5 @@ def reduce_annotations():
 
 if __name__ == "__main__":
     reduce_annotations()
-    test_mediapipe()
+    test_hrnet()
     # show_image(2)

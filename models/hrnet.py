@@ -19,6 +19,12 @@ from transformers import (
 # - should have a bit of padding around the person        #
 #---------------------------------------------------------#
 
+preprocess = tv_transforms.Compose([
+    tv_transforms.ToTensor(),  # converts HxWxC to CxHxW and [0,255] -> [0,1]
+    tv_transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225])
+])
+
 default_weights = "../weights/pose_hrnet_w32_256x192.pth"
 default_config = "../weights/w32_256x192_adam_lr1e-3.yaml"
 
@@ -37,6 +43,7 @@ class HRNet:
         self.model = pose_hrnet.get_pose_net(self.cfg, False)
         self.model.load_state_dict(torch.load(weights_path, map_location="cpu"), strict=False)
         self.model.to(self.device)
+        self.model.eval()
 
     def load_images(self, image_paths, image_loc):
         images = []
@@ -84,83 +91,107 @@ class HRNet:
 
         return filtered_images, filtered_boxes
     
-    def preprocess_image(self, np_image):
-        h, w = np_image.shape[:2]
-        center = np.array([w/2, h/2], dtype=np.float32)
+    def box_to_center_scale(self, box, aspect_ratio=0.75, pixel_std=200):
+        """
+        Convert bounding box to center and scale.
+        aspect_ratio: width / height ratio for the model input (192/256 = 0.75)
+        """
+        x1, y1, x2, y2 = box
+        x = x1
+        y = y1
+        w = x2 - x1
+        h = y2 - y1
+        
+        center = np.zeros((2,), dtype=np.float32)
+        center[0] = x + w * 0.5
+        center[1] = y + h * 0.5
 
-        # HRNet expects scale in "person size / 200"
-        pixel_std = 200
-        scale_x = w / pixel_std
-        scale_y = h / pixel_std
+        if w > aspect_ratio * h:
+            h = w * 1.0 / aspect_ratio
+        elif w < aspect_ratio * h:
+            w = h * aspect_ratio
 
-        scale = np.array([scale_x, scale_y], dtype=np.float32)
+        scale = np.array([w / pixel_std, h / pixel_std], dtype=np.float32)
+        
+        # Add padding factor (typically 1.25 for better coverage)
+        if self.cfg.MODEL.get('EXTRA', {}).get('SCALE_FACTOR', None):
+            scale = scale * 1.25
 
-        input_w = self.cfg.MODEL.IMAGE_SIZE[0]
-        input_h = self.cfg.MODEL.IMAGE_SIZE[1]
-        input_size = [input_w, input_h]    # [192, 256] typically
+        return center, scale
 
-        # resize to 256x192
-        input_image = transforms.crop(np_image, center, scale, input_size)
-
-        # normalize
-        transform = tv_transforms.Compose([
-            tv_transforms.ToTensor(),
-            tv_transforms.Normalize(mean=[0.485,0.456,0.406],
-                                std=[0.229,0.224,0.225])
-        ])
-        tensor_image = transform(input_image).unsqueeze(0)
-        return tensor_image, center, scale
-    
     def estimate_poses(self, filtered_images, filtered_boxes, all_boxes):
         keypoints = []
         j = 0
 
         for boxes in all_boxes:
             if len(boxes) == 0:
-                keypoints.append([{"keypoints": np.zeros((17,2)), "score": 0}])
+                keypoints.append([{"keypoints": np.zeros((17, 3)), "score": 0}])
                 continue
 
             img_poses = []
+            batch_centers = []
+            batch_scales = []
+            batch_images = []
+            
             for box in boxes:
-                image_w, image_h = filtered_images[j].size
-                x1, y1, x2, y2 = box
-
-                # crop image to bbox
-                cropped_img = filtered_images[j].crop((x1, y1, x2, y2))
-                np_img = np.array(cropped_img)
-
-                # run hrnet on crop
-                pre_img, center, scale = self.preprocess_image(np_img)
-
-                self.model.eval()
-                with torch.no_grad():
-                    result = self.model(pre_img.to(self.device)).cpu()
-
-                # raw HRNet joints (in HRNet input resolution)
-                joints, _ = inference.get_final_preds(
-                    self.cfg,
-                    result.numpy(),
-                    [center],
-                    [scale]
+                image = filtered_images[j]
+                
+                # Use proper box_to_center_scale with aspect ratio
+                center, scale = self.box_to_center_scale(
+                    box, 
+                    aspect_ratio=float(self.cfg.MODEL.IMAGE_SIZE[0]) / self.cfg.MODEL.IMAGE_SIZE[1],
+                    pixel_std=200
                 )
+                
+                batch_centers.append(center)
+                batch_scales.append(scale)
+                
+                # Crop and transform image
+                input_image = transforms.crop(
+                    np.array(image), 
+                    center, 
+                    scale, 
+                    self.cfg.MODEL.IMAGE_SIZE  # [width, height] = [192, 256]
+                )
+                
+                # Preprocess
+                pre_img = preprocess(input_image)
+                batch_images.append(pre_img)
 
-                joints = joints[0]  # (17,2)
+            # Batch inference
+            batch_tensor = torch.stack(batch_images).to(self.device)
+            
+            with torch.no_grad():
+                result = self.model(batch_tensor)
+            
+            # Move to CPU and convert to numpy
+            heatmaps = result.cpu().numpy()
+            
+            # Get predictions with scores
+            preds, maxvals = inference.get_final_preds(
+                self.cfg,
+                heatmaps,
+                batch_centers,
+                batch_scales
+            )
 
-                # map HRNet keypoints -> original image
-                mapped = np.zeros_like(joints)
-                mapped[:, 0] = joints[:, 0] + x1
-                mapped[:, 1] = joints[:, 1] + y1
+            # Process each person's pose
+            for idx in range(len(boxes)):
+                # Combine keypoints with confidence scores
+                kps = preds[idx]
 
+                # Calculate overall score as mean of joint confidences
+                overall_score = float(np.mean(maxvals[idx]))
+                
                 img_poses.append({
-                    "keypoints": mapped,
-                    "score": 1.0    # you can set HRNet heatmap score later
+                    "keypoints": kps,
+                    "score": overall_score
                 })
 
             keypoints.append(img_poses)
             j += 1
 
         return keypoints
-
 
     def __call__(self, image_paths, image_loc):
         images = self.load_images(image_paths, image_loc)
