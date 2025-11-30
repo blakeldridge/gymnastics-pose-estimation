@@ -5,3 +5,4 @@ __pycache__
 weights/
 data/
 results/
+.deblur_env
