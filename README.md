@@ -68,6 +68,22 @@ There is a clear lack of accuracy with this model, reasoning :
 
 ---
 
+## Experiment : Affects of Deblurring tools to reduce the affect of motion blur
+
+Used NAFNet to deblur images to compare the affect of pose estimation on motion-blurred images with and without deblurring affect.
+
+![Result](/results/deblur_experiment/comparison_2.png)
+
+### How to run 
+```bash
+bash tests/run_deblur_pipeline.sh
+```
+
+- Requires pose net environment (for ViTPose)
+- Requires deblur environment (for NAFNet)
+
+---
+
 ## Input Data, Annotations, and Weights
 
 ### COCO  
@@ -84,6 +100,13 @@ There is a clear lack of accuracy with this model, reasoning :
 
 - Using the **Full pose landmarker pre-trained weights** : [Mediapipe](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker/index#models)
 - Stored at : `weights/pose_landmarker_full.task`
+
+### NAFNet (Deblur)
+
+- Using **NAFNet REDS weights** : [NAFNet Weights](https://drive.google.com/uc?id=14D4V4raNYIOhETfcuuLI3bGLB-OYIv6X)
+- Stored at : `weights/NAFNet-REDS-width64.pth`
+- Config Files : [NAFNet Config](https://github.com/megvii-research/NAFNet/tree/main/options/test/REDS)
+- Stored at : `weights/NAFNet-width64.pth`
 
 ---
 
