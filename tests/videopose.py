@@ -8,7 +8,7 @@ from models.vitpose import ViTPose
 video_path = os.path.abspath("data/videos/videopose_test.mp4")
 frames_dir = "results/videopose/frames"
 results_json = "results/videopose/vitpose_results.json"
-output_npz = "results/videpose/data_2d_custom_myvideo.npz"
+output_npz = "results/videopose/data_2d_custom_myvideo.npz"
 batch_size = 3
 joint_mapping = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
@@ -53,20 +53,14 @@ def run_model(frames, frames_dir, results_path, batch_size=-1):
         for index, output in enumerate(outputs):
             image_id = batch[index]
             if isinstance(output, list):
-                for pose in output:
-                    keypoints = pose["keypoints"]
-                    score = pose["score"]
-                    visibility = np.ones(keypoints.shape[0]).reshape(-1, 1)
-                    keypoints = np.round(np.hstack([keypoints, visibility]).reshape(-1))
-                    result = {"image_id": image_id, "category_id": 1, "keypoints": keypoints.tolist(), "score": float(score)}
-                    results.append(result)
-            else:
-                keypoints = output["keypoints"]
-                score = output["score"]
-                visibility = np.ones(keypoints.shape[0]).reshape(-1, 1)
-                keypoints = np.round(np.hstack([keypoints, visibility]).reshape(-1))
-                result = {"image_id": image_id, "category_id": 1, "keypoints": keypoints.tolist(), "score": float(score)}
-                results.append(result)
+                output = output[0]
+
+            keypoints = output["keypoints"]
+            score = output["score"]
+            visibility = np.ones(keypoints.shape[0]).reshape(-1, 1)
+            keypoints = np.round(np.hstack([keypoints, visibility]).reshape(-1))
+            result = {"image_id": image_id, "category_id": 1, "keypoints": keypoints.tolist(), "score": float(score)}
+            results.append(result)
 
         print(f"Batch {i + 1} Completed : {(time.time() - batch_time):.2f} secs")
         batch_time = time.time()
@@ -78,12 +72,22 @@ def run_model(frames, frames_dir, results_path, batch_size=-1):
     print(f"Pose Estimation Complete : {(end_time - start_time):.2f} secs")
     return results_path
 
-def vitpose_to_videopose_npz(results_json_path, frames_dir, output_path, joint_mapping=None):
+def vitpose_to_videopose_npz(results_json_path, video_path, frames_dir, output_path, joint_mapping=None):
     with open(results_json_path, "r") as f:
         results = json.load(f)
 
+    # Frame list
     frames = sorted(os.listdir(frames_dir))
     num_frames = len(frames)
+
+    # Extract video resolution + fps
+    cap = cv2.VideoCapture(video_path)
+    width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps    = cap.get(cv2.CAP_PROP_FPS)
+    cap.release()
+
+    # Prepare array
     num_joints = len(results[0]["keypoints"]) // 3
     positions_2d = np.zeros((num_frames, num_joints, 2), dtype=np.float32)
 
@@ -96,15 +100,35 @@ def vitpose_to_videopose_npz(results_json_path, frames_dir, output_path, joint_m
 
         positions_2d[frame_idx, :, 0:2] = keypoints[:, 0:2]
 
-    np.savez(output_path,
-             positions_2d=positions_2d,
-             positions_3d=None,
-             metadata={"video_name": {"subject": "video_name",
-                                      "action": "custom",
-                                      "camera": 0}})
+    output = {
+        "positions_2d": {
+            "video_name": {
+                "custom": [positions_2d]
+            }
+        },
+        "metadata": {
+            "layout_name": "coco",
+            "num_joints": num_joints,
+            "keypoints_symmetry": (
+                [1, 3, 5, 7, 9, 11, 13, 15],   # left side joints
+                [2, 4, 6, 8, 10, 12, 14, 16]   # right side joints
+            ),
+            "video_metadata": {
+                "video_name": {
+                    "w": width,
+                    "h": height,
+                    "fps": fps
+                }
+            }
+        }
+    }
+
+    np.savez(output_path, **output)
     print(f"Saved VideoPose3D 2D keypoints to {output_path}")
 
 if __name__ == "__main__":
     frames = extract_frames(video_path, frames_dir)
     results_json_path = run_model(frames, frames_dir, results_json, batch_size=batch_size)
-    vitpose_to_videopose_npz(results_json_path, frames_dir, output_npz, joint_mapping)
+
+    # results_json_path = results_json
+    vitpose_to_videopose_npz(results_json_path, video_path, frames_dir, output_npz, joint_mapping)
