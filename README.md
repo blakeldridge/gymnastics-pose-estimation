@@ -84,6 +84,24 @@ bash tests/run_deblur_pipeline.sh
 
 ---
 
+## Experiment : Testing temporal 3D lifting to help improve accuracy of self-occlusion using VideoPose3D
+
+Used VideoPose3D with ViTPose predicted 2D poses on a few videos. 
+
+A few issues arise that prevent this method from being affected:
+1. Right and left sides of the body can be mixed up due to odd orientations in gymnsatics
+![Left/Right Side Switch](/results/videopose/round_off_vp.mp4)
+
+2. Requires one person focuse, on unconfident poses, people in the background can impact the outcome.
+![Unconfident Poses](/results/videopose/circle_vp.mp4)
+
+### How to run
+```bash
+bash tests/run_videopose.sh <input_video> <output_folder>
+```
+
+---
+
 ## Input Data, Annotations, and Weights
 
 ### COCO  
@@ -107,6 +125,13 @@ bash tests/run_deblur_pipeline.sh
 - Stored at : `weights/NAFNet-REDS-width64.pth`
 - Config Files : [NAFNet Config](https://github.com/megvii-research/NAFNet/tree/main/options/test/REDS)
 - Stored at : `weights/NAFNet-width64.pth`
+
+
+### VideoPose3D
+
+- Requires VideoPose3D repo to be installed : [VideoPose3D](https://github.com/facebookresearch/VideoPose3D)
+- Weights : [VideoPose3D Weights](https://dl.fbaipublicfiles.com/video-pose-3d/pretrained_h36m_detectron_coco.bin)
+- Stored at : `checkpoint/pretrained_h36m_detectron_coco.bin`
 
 ---
 

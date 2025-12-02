@@ -7,3 +7,4 @@ data/
 .deblur_env
 .videopose-env
 frames/
+checkpoint/
