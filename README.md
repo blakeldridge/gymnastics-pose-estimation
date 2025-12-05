@@ -95,6 +95,8 @@ A few issues arise that prevent this method from being affected:
 2. Requires one person focuse, on unconfident poses, people in the background can impact the outcome.
 ![Unconfident Poses](/results/videopose/circle_vp.mp4)
 
+3. VideoPose3D struggles with weird orientation, hips dont seem to rotate, but body and legs rotate around the hip
+
 ### How to run
 ```bash
 bash tests/run_videopose.sh <input_video> <output_folder>
