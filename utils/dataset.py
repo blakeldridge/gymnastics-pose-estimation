@@ -7,8 +7,10 @@ import random
 from bpy_extras.object_utils import world_to_camera_view
 
 DIR = "C:/Data/cmu_mocap"
-output_base = "C:/Data/mocap_dataset/87_01/frames"
+output_base = "C:/Data/mocap_dataset"
 output_json = "C:/Data/mocap_dataset/87_01/annotations.json"
+
+animations = os.listdir(DIR)
 
 def load_animation(animation_path):
     bpy.ops.import_scene.fbx(filepath=animation_path)
@@ -77,69 +79,76 @@ def add_floor():
     floor.data.materials.append(mat)
 
 # ------------------- Scene Setup -------------------
-reset_scene()
+def render_animation(file):
+    print(f"Started Rendering : {file}")
+    output_folder = os.path.join(output_base, file.split(".")[0])
+    frame_folder = os.path.join(output_folder, "frames")
+    annotations_path = os.path.join(output_folder, "annotations.json")
+    reset_scene()
 
-scene = bpy.context.scene
+    scene = bpy.context.scene
 
-# Load animation
-animation = os.path.join(DIR, "87_01.fbx")
-load_animation(animation)
+    # Load animation
+    animation_path = os.path.join(DIR, file)
+    load_animation(animation_path)
 
-armature = bpy.data.objects['CharacterArmature']
-armature.location = (0.5, 0, -1)
-action_name = bpy.data.actions.keys()[0]
-armature.animation_data.action = bpy.data.actions[action_name]
-action = armature.animation_data.action
+    armature = bpy.data.objects['CharacterArmature']
+    armature.location = (0, 0, -1)
+    action_name = bpy.data.actions.keys()[0]
+    armature.animation_data.action = bpy.data.actions[action_name]
+    action = armature.animation_data.action
 
-# Floor
-add_floor()
+    # Floor
+    add_floor()
 
-# Lights
-add_light("KeyLight", "AREA", (4, -4, 4), power=800)
-add_light("FillLight", "AREA", (-4, -2, 3), power=300)
-add_light("RimLight", "POINT", (0, 4, 5), power=600)
+    # Lights
+    add_light("KeyLight", "AREA", (4, -4, 4), power=800)
+    add_light("FillLight", "AREA", (-4, -2, 3), power=300)
+    add_light("RimLight", "POINT", (0, 4, 5), power=600)
 
-for light in [bpy.data.objects['KeyLight'],
-              bpy.data.objects['FillLight'],
-              bpy.data.objects['RimLight']]:
-    base_energy = light.data.energy
-    light.data.energy = base_energy * random.uniform(0.9, 1.1) 
-    color_variation = [random.uniform(0.95, 1.05) for _ in range(3)]
-    base_color = (1, 0.95, 0.9)  # slightly warm
-    light.data.color = [base_color[i] * color_variation[i] for i in range(3)]
+    for light in [bpy.data.objects['KeyLight'],
+                bpy.data.objects['FillLight'],
+                bpy.data.objects['RimLight']]:
+        base_energy = light.data.energy
+        light.data.energy = base_energy * random.uniform(0.9, 1.1) 
+        color_variation = [random.uniform(0.95, 1.05) for _ in range(3)]
+        base_color = (1, 0.95, 0.9)  # slightly warm
+        light.data.color = [base_color[i] * color_variation[i] for i in range(3)]
 
-# Cameras
-cameras = add_cameras_around_origin(num_cams=4, radius=8, heights=[2.0, 3.5])
+    # Cameras
+    cameras = add_cameras_around_origin(num_cams=4, radius=8, heights=[2.0, 3.5])
 
-# ------------------- Render & Save Keypoints -------------------
-scene.frame_start = int(action.frame_range[0])
-scene.frame_end = int(action.frame_range[1])
+    # ------------------- Render & Save Keypoints -------------------
+    scene.frame_start = int(action.frame_range[0])
+    scene.frame_end = int(action.frame_range[1])
 
-# Store results
-dataset = {"images": [], "annotations_2d": {}, "annotations_3d": {}}
-image_id = 0
+    # Store results
+    dataset = {"images": [], "annotations_2d": {}, "annotations_3d": {}}
 
-for frame in range(scene.frame_start, scene.frame_end + 1):
-    scene.frame_set(frame)
+    for frame in range(scene.frame_start, scene.frame_end + 1):
+        scene.frame_set(frame)
 
-    # 3D joints
-    joints_3d = get_3d_joints(armature)
-    dataset["annotations_3d"][frame] = joints_3d
+        # 3D joints
+        joints_3d = get_3d_joints(armature)
+        dataset["annotations_3d"][frame] = joints_3d
 
-    for i, cam in enumerate(cameras):
-        scene.camera = cam
-        img_name = f"cam{i}_frame{frame:04d}.png"
-        scene.render.filepath = os.path.join(output_base, img_name)
-        bpy.ops.render.render(write_still=True)
+        for i, cam in enumerate(cameras):
+            scene.camera = cam
+            img_name = f"cam{i}_frame{frame:04d}.png"
+            scene.render.filepath = os.path.join(frame_folder, img_name)
+            bpy.ops.render.render(write_still=True)
 
-        # 2D joints
-        joints_2d = get_2d_joints(cam, joints_3d)
-        dataset["annotations_2d"][img_name] = joints_2d
+            # 2D joints
+            joints_2d = get_2d_joints(cam, joints_3d)
+            dataset["annotations_2d"][img_name] = joints_2d
 
-    print(f"Rendered frame {frame} for {len(cameras)} cameras")
+        print(f"Rendered frame {frame} for {len(cameras)} cameras")
 
-# Save JSON
-with open(output_json, "w") as f:
-    json.dump(dataset, f, indent=4)
+    # Save JSON
+    with open(annotations_path, "w") as f:
+        json.dump(dataset, f, indent=4)
 
-print("Render complete with 2D and 3D keypoints!")
+    print(f"Render complete : {file}")
+
+for file in animations:
+    render_animation(file)
