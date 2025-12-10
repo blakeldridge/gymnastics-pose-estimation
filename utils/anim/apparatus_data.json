@@ -1,0 +1,131 @@
+{
+    "dimensions" : {
+        "floor":{
+            "outer_width":14,
+            "inner_width":12
+        },
+        "pommel_horse":{
+            "length": 1.7,
+            "width": 0.32,
+            "height":0.43
+        },
+        "rings":{
+            "base_width":3.05,
+            "ring_width":0.5,
+            "ring_height":2.7
+        },
+        "vault":{
+            "length":1.2,
+            "width":0.96,
+            "height":1.35
+        },
+        "parallel_bars":{
+            "length":2.3,
+            "width":0.42,
+            "height":1.8
+        },
+        "high_bar":{
+            "width":2.5,
+            "height":2.6
+        }
+    },
+    "camera_points" : {
+        "floor": [
+            "top_left",
+            "top_right",
+            "bottom_left",
+            "bottom_right"
+        ],
+        "pommel_horse": [
+            "top_front_left",
+            "top_front_right",
+            "top_back_left",
+            "top_back_right",
+            "bottom_front_left",
+            "bottom_front_right",
+            "bottom_back_left",
+            "bottom_back_right"
+        ],
+        "rings":[
+            "ring_left_bottom",
+            "ring_right_bottom",
+            "base_left",
+            "base_right"
+        ],
+        "vault":[
+            "table_top_left",
+            "table_top_right",
+            "table_bottom_left",
+            "table_bottom_right",
+            "vault_bottom"
+        ],
+        "parallel_bars": [
+            "top_front_left",
+            "top_front_right",
+            "top_back_left",
+            "top_back_right",
+            "bottom_front_left",
+            "bottom_front_right",
+            "bottom_back_left",
+            "bottom_back_right"
+        ],
+        "high_bar":[
+            "top_left",
+            "top_right",
+            "bottom_left",
+            "bottom_right"
+        ]
+    },
+    "3d_object_points": {
+        "floor": [
+            [-6.0,  0.0,  6.0],
+            [ 6.0,  0.0,  6.0],
+            [-6.0,  0.0, -6.0],
+            [ 6.0,  0.0, -6.0]
+        ],
+
+        "pommel_horse": [
+            [-0.85, 0.43,  0.16],
+            [ 0.85, 0.43,  0.16],
+            [-0.85, 0.43, -0.16],
+            [ 0.85, 0.43, -0.16],
+            [-0.85, 0.0,  0.16],
+            [ 0.85, 0.0,  0.16],
+            [-0.85, 0.0, -0.16],
+            [ 0.85, 0.0, -0.16]
+        ],
+
+        "rings": [
+            [-0.25, 2.7, 0.0],
+            [ 0.25, 2.7, 0.0],
+            [-1.525, 0.0, 0.0],
+            [ 1.525, 0.0, 0.0]
+        ],
+
+        "vault": [
+            [-0.48, 1.35,  0.6],
+            [ 0.48, 1.35,  0.6],
+            [-0.48, 1.35, -0.6],
+            [ 0.48, 1.35, -0.6],
+            [ 0.0,  0.0,  0.0]
+        ],
+
+        "parallel_bars": [
+            [-1.15, 1.8,  0.21],
+            [ 1.15, 1.8,  0.21],
+            [-1.15, 1.8, -0.21],
+            [ 1.15, 1.8, -0.21],
+            [-1.15, 0.0,  0.21],
+            [ 1.15, 0.0,  0.21],
+            [-1.15, 0.0, -0.21],
+            [ 1.15, 0.0, -0.21]
+        ],
+
+        "high_bar": [
+            [-1.25, 2.6, 0.0],
+            [ 1.25, 2.6, 0.0],
+            [-1.25, 0.0, 0.0],
+            [ 1.25, 0.0, 0.0]
+        ]
+    }
+}

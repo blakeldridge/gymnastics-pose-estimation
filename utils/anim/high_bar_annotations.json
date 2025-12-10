@@ -1,0 +1,107 @@
+[
+    {
+        "image": "../../data/mocap/kovacs/kovacs_back_000.png",
+        "points": {
+            "top_left": [
+                873,
+                493
+            ],
+            "top_right": [
+                499,
+                493
+            ],
+            "bottom_left": [
+                499,
+                888
+            ],
+            "bottom_right": [
+                873,
+                888
+            ]
+        }
+    },
+    {
+        "image": "../../data/mocap/kovacs/kovacs_top_000.png",
+        "points": {
+            "top_left": [
+                435,
+                459
+            ],
+            "top_right": [
+                935,
+                461
+            ],
+            "bottom_left": [
+                435,
+                458
+            ],
+            "bottom_right": [
+                933,
+                461
+            ]
+        }
+    },
+    {
+        "image": "../../data/mocap/kovacs/kovacs_front_000.png",
+        "points": {
+            "top_left": [
+                498,
+                492
+            ],
+            "top_right": [
+                875,
+                494
+            ],
+            "bottom_left": [
+                499,
+                888
+            ],
+            "bottom_right": [
+                872,
+                888
+            ]
+        }
+    },
+    {
+        "image": "../../data/mocap/kovacs/kovacs_left_000.png",
+        "points": {
+            "top_left": [
+                687,
+                496
+            ],
+            "top_right": [
+                687,
+                496
+            ],
+            "bottom_left": [
+                686,
+                886
+            ],
+            "bottom_right": [
+                686,
+                886
+            ]
+        }
+    },
+    {
+        "image": "../../data/mocap/kovacs/kovacs_right_000.png",
+        "points": {
+            "top_left": [
+                688,
+                495
+            ],
+            "top_right": [
+                688,
+                495
+            ],
+            "bottom_left": [
+                686,
+                887
+            ],
+            "bottom_right": [
+                686,
+                887
+            ]
+        }
+    }
+]

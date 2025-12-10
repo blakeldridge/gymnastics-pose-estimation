@@ -2,53 +2,15 @@ import json
 import numpy as np
 import cv2
 
-# pommel dimensions in pixels (halved)
-pommel_length = 377 / 2  # pixels
-pommel_width  = 91 / 2
-pommel_height = 63 / 2
-
-# pommel dimensions in meters
-real_length = 1.7    # meters
-real_width  = 0.32
-real_height = 0.43
-
-# Scale factor to convert pixel object points to Unity-realistic scale
-scale_x = real_length / (2 * pommel_length)
-scale_y = real_width / (2 * pommel_width)
-scale_z = real_height / (2 * pommel_height)
-
-# Object points in 3D (centered at origin)
-object_points_master = np.array([
-    [-pommel_length*scale_x,  pommel_width*scale_y,   0.0],
-    [ pommel_length*scale_x,  pommel_width*scale_y,   0.0],
-    [-pommel_length*scale_x, -pommel_width*scale_y,   0.0],
-    [ pommel_length*scale_x, -pommel_width*scale_y,   0.0],
-    [-pommel_length*scale_x,  pommel_width*scale_y,  -pommel_height*scale_z],
-    [ pommel_length*scale_x,  pommel_width*scale_y,  -pommel_height*scale_z],
-    [-pommel_length*scale_x, -pommel_width*scale_y,  -pommel_height*scale_z],
-    [ pommel_length*scale_x, -pommel_width*scale_y,  -pommel_height*scale_z],
-], dtype=np.float32)
-
-POINT_NAMES = [
-    "top_front_left",
-    "top_front_right",
-    "top_back_left",
-    "top_back_right",
-    "bottom_front_left",
-    "bottom_front_right",
-    "bottom_back_left",
-    "bottom_back_right",
-]
-
 # Load annotations
 def load_annotations(path):
     with open(path) as f:
         return json.load(f)
 
-def extract_points(ann):
+def extract_points(ann, object_points_master, point_names):
     obj = []
     img = []
-    for idx, name in enumerate(POINT_NAMES):
+    for idx, name in enumerate(point_names):
         pt = ann["points"].get(name)
         if pt is not None:
             obj.append(object_points_master[idx])
@@ -56,14 +18,20 @@ def extract_points(ann):
     return np.array(obj, np.float32), np.array(img, np.float32)
 
 # Calibration function
-def refine_intrinsics(annotation_file, width=1920, height=1080):
-    anns = load_annotations(annotation_file)
+def refine_intrinsics(apparatus, width=1920, height=1080):
+    anns = load_annotations(f"{apparatus}_annotations.json")
+
+    with open("apparatus_data.json", "r") as f:
+        data = json.loads(f.read())
+
+    object_points_master = np.array(data["3d_object_points"][apparatus], dtype=np.float32)
+    point_names = data["camera_points"][apparatus]
 
     all_obj_points = []
     all_img_points = []
 
     for ann in anns:
-        obj, img = extract_points(ann)
+        obj, img = extract_points(ann, object_points_master, point_names)
         if len(obj) >= 4:
             all_obj_points.append(obj)
             all_img_points.append(img)
@@ -124,10 +92,11 @@ def refine_intrinsics(annotation_file, width=1920, height=1080):
             "tvec": tvec.flatten().tolist()
         })
 
-    with open("refined_camera_data.json", "w") as f:
+    with open(f"camera_data/{apparatus}.json", "w") as f:
         json.dump(results, f, indent=4)
 
     print("\nSaved → refined_camera_data.json")
 
 if __name__ == "__main__":
-    refine_intrinsics("pommel_annotations.json")
+    apparatus = input("Apparatus : ")
+    refine_intrinsics(apparatus)
